@@ -32,24 +32,35 @@ def predict():
     try:
         data = request.get_json()
         
-        # Create DataFrame matching your model's training format
+        print(f"DEBUG: Received Data -> {data}")
+
+        required_keys = ['batting_team', 'bowling_team', 'current_score', 'overs', 'wickets', 'crr']
+        for key in required_keys:
+            if key not in data or data[key] == "":
+                return jsonify({'error': f'Missing or empty field: {key}'}), 400
+
         input_df = pd.DataFrame({
-            'batting_team': [data['batting_team']],
-            'bowling_team': [data['bowling_team']],
+            'batting_team': [str(data['batting_team'])],
+            'bowling_team': [str(data['bowling_team'])],
             'current_score': [int(data['current_score'])],
             'overs': [float(data['overs'])],
             'wickets': [int(data['wickets'])],
             'crr': [float(data['crr'])]
         })
-        
+
         prediction = model.predict(input_df)[0]
-        return jsonify({'status': 'success', 'predicted_score': int(prediction)})
+
+        result = int(prediction) if not hasattr(prediction, '__iter__') else int(prediction[0])
+        
+        return jsonify({
+            'status': 'success', 
+            'predicted_score': result
+        })
         
     except Exception as e:
+        print(f"ERROR: {str(e)}") 
         return jsonify({'error': str(e)}), 400
 
-# 2. Port Binding Fix: Render tells the app which port to use via an Env Var
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    # '0.0.0.0' is required for the internet to reach your Render container
     app.run(host="0.0.0.0", port=port)
