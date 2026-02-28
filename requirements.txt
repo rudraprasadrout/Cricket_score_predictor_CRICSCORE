@@ -2,6 +2,6 @@ flask
 flask-cors
 pandas
 numpy
-gunicorn  
-joblib
-scikit-learn==1.7.2
+scikit-learn==1.6.1
+xgboost
+gunicorn
