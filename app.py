@@ -32,33 +32,25 @@ def predict():
     try:
         data = request.get_json()
         
-        print(f"DEBUG: Received Data -> {data}")
-
-        required_keys = ['batting_team', 'bowling_team', 'current_score', 'overs', 'wickets', 'crr']
-        for key in required_keys:
-            if key not in data or data[key] == "":
-                return jsonify({'error': f'Missing or empty field: {key}'}), 400
+        overs_val = float(data['overs'])
+        full_overs = int(overs_val)
+        extra_balls = int(round((overs_val - full_overs) * 10))
+        total_balls = (full_overs * 6) + extra_balls
 
         input_df = pd.DataFrame({
-            'batting_team': [str(data['batting_team'])],
-            'bowling_team': [str(data['bowling_team'])],
+            'battingTeam': [data['batting_team']],
+            'bowlingTeam': [data['bowling_team']],
             'current_score': [int(data['current_score'])],
-            'overs': [float(data['overs'])],
+            'balls': [total_balls],
             'wickets': [int(data['wickets'])],
-            'crr': [float(data['crr'])]
+            'CRR': [float(data['crr'])]
         })
-
-        prediction = model.predict(input_df)[0]
-
-        result = int(prediction) if not hasattr(prediction, '__iter__') else int(prediction[0])
         
-        return jsonify({
-            'status': 'success', 
-            'predicted_score': result
-        })
+        prediction = model.predict(input_df)[0]
+        return jsonify({'status': 'success', 'predicted_score': int(prediction)})
         
     except Exception as e:
-        print(f"ERROR: {str(e)}") 
+        print(f"New Error: {str(e)}")
         return jsonify({'error': str(e)}), 400
 
 if __name__ == "__main__":
